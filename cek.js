@@ -1,9 +1,9 @@
+const fs = require('fs');
 const axios = require('axios');
 const HttpsProxyAgent = require('https-proxy-agent');
-const readline = require('readline');
 
 // Konfigurasi proxy jika diperlukan
-const PROXY = 'PROXY LO'; // Ganti dengan proxy punya lo
+const PROXY = 'PROXY'; // Ganti dengan proxy Punya LO
 const httpsAgent = new HttpsProxyAgent(PROXY);
 
 // Konfigurasi header sesuai kebutuhan Anda
@@ -27,8 +27,8 @@ const headers = {
 };
 
 // Token dan Chat ID Telegram
-const TELEGRAM_TOKEN = 'TOKEN TELE LO'; // Ganti dengan Token API bot LO
-const TELEGRAM_CHAT_ID = 'CHAT ID'; // Ganti dengan Chat ID LO
+const TELEGRAM_TOKEN = 'bot token lo'; // Ganti dengan Token API bot LO
+const TELEGRAM_CHAT_ID = 'chat id lo'; // Ganti dengan Chat ID LO
 
 // Fungsi untuk mengirim notifikasi Telegram
 async function sendTelegramNotification(message) {
@@ -45,52 +45,60 @@ async function sendTelegramNotification(message) {
   }
 }
 
-// Membuat antarmuka readline
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+// Fungsi untuk memeriksa stok produk
+async function checkStock(skuId) {
+  try {
+    const response = await axios.post(
+      'https://qpon-food-gl.qponmobile.com/digital-food/local_life/product/detail',
+      {
+        skuId,
+        userLat: null,
+        userLng: null,
+        sessionId: 'm9jcgr2j5pb4n',
+        requestId: 'm9jhhswoj2qhv', 
+        timestamp: Date.now(),
+      },
+      { headers, httpsAgent }
+    );
 
-// Menanyakan skuId kepada pengguna
-rl.question('Masukkan skuId produk yang ingin dipantau: ', (inputSkuId) => {
-  const skuId = inputSkuId.trim();
+    const product = response.data?.data;
+    const remainingStock = product?.remainingStock || 0;
+    const name = product?.productName?.['id-ID'] || 'Tidak diketahui';
 
-  // Fungsi untuk memeriksa stok
-  async function checkStock() {
-    try {
-      const response = await axios.post(
-        'https://qpon-food-gl.qponmobile.com/digital-food/local_life/product/detail',
-        {
-          skuId,
-          userLat: null,
-          userLng: null,
-          sessionId: 'm9jcgr2j5pb4n', 
-          requestId: 'm9jhhswoj2qhv', 
-          timestamp: Date.now(),
-        },
-        { headers, httpsAgent }
-      );
-
-      const product = response.data?.data;
-      const remainingStock = product?.remainingStock || 0;
-      const name = product?.productName?.['id-ID'] || 'Tidak diketahui';
-
-      if (remainingStock > 0) {
-        const message = `✅ *Stok Tersedia!*\nProduk: *${name}*\nSisa Stok: *${remainingStock}*`;
-        console.log(message);
-        await sendTelegramNotification(message);
-      
-      } else {
-        console.log(`❌ Stok habis untuk produk: ${name}`);
-      }
-    } catch (error) {
-      console.error('❌ Terjadi kesalahan saat memeriksa stok:', error.message);
+    if (remainingStock > 0) {
+      const message = `✅ *Stok Tersedia!*\nProduk: *${name}*\nSisa Stok: *${remainingStock}*`;
+      console.log(message);
+      await sendTelegramNotification(message);
+    } else {
+      console.log(`❌ Stok habis untuk produk: ${name}`);
     }
+  } catch (error) {
+    console.error(`❌ Terjadi kesalahan saat memeriksa stok untuk SKU ${skuId}:`, error.message);
   }
+}
 
-  // Jalankan pengecekan stok secara berkala setiap 30 detik
-  setInterval(checkStock, 30000); // ubah waktu yang lu pengen dengan milisecond
+// Membaca daftar skuId dari file
+function readSkuList(filePath) {
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    const skuList = data.split('\n').map(sku => sku.trim()).filter(sku => sku);
+    return skuList;
+  } catch (error) {
+    console.error('❌ Gagal membaca file daftar SKU:', error.message);
+    return [];
+  }
+}
 
-  // Tutup antarmuka readline setelah input diterima
-  rl.close();
-});
+// Fungsi utama untuk memeriksa stok semua produk
+async function checkAllStocks() {
+  const skuList = readSkuList('sku_list.txt');
+  for (const skuId of skuList) {
+    await checkStock(skuId);
+  }
+}
+
+// Jalankan pengecekan stok secara berkala setiap 30 detik
+setInterval(checkAllStocks, 30000); //ubah interval sesuai yang lu pengen
+
+// Jalankan pengecekan stok pertama kali saat skrip dimulai
+checkAllStocks();
