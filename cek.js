@@ -3,7 +3,7 @@ const HttpsProxyAgent = require('https-proxy-agent');
 const readline = require('readline');
 
 // Konfigurasi proxy jika diperlukan
-const PROXY = 'http://savagethis-zone-custom-region-ID-sessid-bjbvlNJg-sessTime-5:savagethis@111.91.2.228:6200'; // Ganti dengan proxy Anda jika diperlukan
+const PROXY = 'PROXY LO'; // Ganti dengan proxy punya lo
 const httpsAgent = new HttpsProxyAgent(PROXY);
 
 // Konfigurasi header sesuai kebutuhan Anda
@@ -24,12 +24,11 @@ const headers = {
   'x-euler-headers': 'accept;appkey;authorize;cptype;identitytype;sign;timestamp;x-app;x-digital-food;x-model;x-protocol-ver;x-sys',
   'referer': 'https://qpon.id/',
   'origin': 'https://qpon.id'
-  // Tambahkan header yang diperlukan di sini
 };
 
 // Token dan Chat ID Telegram
-const TELEGRAM_TOKEN = '7662277377:AAFaXz6G_3NuFIgbX8XONwaEEPqtoKtLiL4'; // Ganti dengan Token API bot Anda
-const TELEGRAM_CHAT_ID = '1236786198'; // Ganti dengan Chat ID Anda
+const TELEGRAM_TOKEN = 'TOKEN TELE LO'; // Ganti dengan Token API bot LO
+const TELEGRAM_CHAT_ID = 'CHAT ID'; // Ganti dengan Chat ID LO
 
 // Fungsi untuk mengirim notifikasi Telegram
 async function sendTelegramNotification(message) {
@@ -65,8 +64,8 @@ rl.question('Masukkan skuId produk yang ingin dipantau: ', (inputSkuId) => {
           skuId,
           userLat: null,
           userLng: null,
-          sessionId: 'm9jcgr2j5pb4n', // Ganti dengan sessionId Anda
-          requestId: 'm9jhhswoj2qhv', // Ganti dengan requestId Anda
+          sessionId: 'm9jcgr2j5pb4n', 
+          requestId: 'm9jhhswoj2qhv', 
           timestamp: Date.now(),
         },
         { headers, httpsAgent }
@@ -80,7 +79,7 @@ rl.question('Masukkan skuId produk yang ingin dipantau: ', (inputSkuId) => {
         const message = `✅ *Stok Tersedia!*\nProduk: *${name}*\nSisa Stok: *${remainingStock}*`;
         console.log(message);
         await sendTelegramNotification(message);
-        // Tambahkan logika tambahan di sini, misalnya, melakukan pembelian otomatis
+      
       } else {
         console.log(`❌ Stok habis untuk produk: ${name}`);
       }
@@ -90,7 +89,7 @@ rl.question('Masukkan skuId produk yang ingin dipantau: ', (inputSkuId) => {
   }
 
   // Jalankan pengecekan stok secara berkala setiap 30 detik
-  setInterval(checkStock, 30000);
+  setInterval(checkStock, 30000); // ubah waktu yang lu pengen dengan milisecond
 
   // Tutup antarmuka readline setelah input diterima
   rl.close();
